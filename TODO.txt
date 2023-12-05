@@ -1,0 +1,2 @@
+1) Make Webcam Pics Send As One File (Maby Embed)
+2) Add GetSystem Info (ip, And shit like that)

