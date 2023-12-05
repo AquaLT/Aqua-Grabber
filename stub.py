@@ -5,6 +5,8 @@ import re
 import shutil
 import glob
 import subprocess
+from typing import Any
+
 import cv2
 import win32com.client
 import requests
@@ -204,7 +206,7 @@ def getDcToken():
 
         return decrypted_pass
 
-    def get_master_key(path: str) -> str:
+    def get_master_key(path: str) -> Any | None:
         if not os.path.exists(path):
             return
 
