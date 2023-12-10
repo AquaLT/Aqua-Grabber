@@ -5,8 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3674c106-a68d-4e9e-8061-a624fea8b545" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/uacbypass.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/stub.py" beforeDir="false" afterPath="$PROJECT_DIR$/stub.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
